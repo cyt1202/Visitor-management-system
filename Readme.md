@@ -4,7 +4,7 @@
 
 访客管理系统旨在简化学校外访客的登记、预约和审批流程。该系统为访客提供便捷的预约渠道，同时为大学工作人员提供管理和监控来访者的有效工具。系统确保记录准确、减少人工工作量，并提升校园安全与运营效率。
 
-Demo：https://github.com/user-attachments/assets/6c9f1ca9-3d74-47ca-9bb1-ed2d94a18909
+Demo Vedio：https://github.com/user-attachments/assets/6c9f1ca9-3d74-47ca-9bb1-ed2d94a18909
 
 ## 系统架构
 
@@ -209,3 +209,4 @@ project/
 - 已批准的预约取消需要重新审核
 
 - 管理员操作有完整的日志记录
+
