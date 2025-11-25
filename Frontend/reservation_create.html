@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Reservation Creation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    
+    <div class="container mx-auto px-6 py-8">
+        <a href="visitor_home.html" class="text-blue-600 hover:underline mb-4 inline-block">&larr; Back to front page</a>
+        
+        <div class="bg-white p-8 rounded-lg shadow-lg max-w-2xl mx-auto">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-2">File in reservation information</h2>
+            
+            <form id="resForm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">Date</label>
+                        <input type="date" id="date" class="w-full border p-2 rounded" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">time</label>
+                        <input type="time" id="time" class="w-full border p-2 rounded" required>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-bold mb-2">Location</label>
+                    <input type="text" 
+                        id="location" 
+                        class="w-full border p-2 rounded focus:outline-none focus:border-blue-500"
+                        placeholder="Enter visit location (e.g., Main Building Room 301)"
+                        required>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-gray-700 font-bold mb-2">Reason for eservation</label>
+                    <textarea id="purpose" rows="3" class="w-full border p-2 rounded" placeholder="Please enter the reason for your visit..."></textarea>
+                </div>
+
+                <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded hover:bg-green-700 transition">
+                    Submit
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('resForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const reservationData = {
+                user_id: localStorage.getItem("user_id"),
+                date: document.getElementById('date').value,
+                time: document.getElementById('time').value,
+                location: document.getElementById('location').value,
+                purpose: document.getElementById('purpose').value
+            };
+            
+            fetch("/api/reservations", {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + localStorage.getItem('token') // Bring Token
+                },
+                body: JSON.stringify(reservationData)
+            })
+            .then(res => {
+                if(res.ok) {
+                    alert('Submission Success!');
+                    window.location.href = 'visitor_home.html';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

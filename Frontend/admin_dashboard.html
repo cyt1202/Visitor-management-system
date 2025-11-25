@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Administrator's Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <nav class="bg-gray-800 text-white mb-8">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+        <div class="text-xl font-bold">Admin Dashboard</div>
+            
+            <div class="flex gap-4">
+                <button onclick="openAdminProfile()" class="text-gray-300 hover:text-white font-bold">
+                    My Profile
+                </button>
+                
+                <button onclick="logout()" class="text-red-400 hover:text-red-300">
+                    Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-6">
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-4 rounded shadow border-l-4 border-yellow-500">
+                <div class="text-gray-500">Pending Approval</div>
+                <div id="pendingCount" class="text-2xl font-bold">...</div> </div>
+            
+            <div class="bg-white p-4 rounded shadow border-l-4 border-green-500">
+                <div class="text-gray-500">Today's Visitors</div>
+                <div id="todayVisitorsCount" class="text-2xl font-bold">...</div> </div>
+            
+            <div class="bg-white p-4 rounded shadow border-l-4 border-blue-500">
+                <div id="popularLocationName" class="text-gray-500">Popular Location: ...</div> <div id="popularLocationTotal" class="text-2xl font-bold">...</div> </div>
+        </div>
+
+                <div class="dashboard-metrics grid grid-cols-2 gap-6 mb-8">
+            <div class="bg-white p-6 shadow rounded-lg">
+                <h3 class="text-lg font-semibold mb-3">Today's Approved Visitors</h3>
+                <ul id="todayVisitorsList">
+                    <li class="text-gray-500">Loading...</li>
+                </ul>
+                <button onclick="fetchTodayVisitors()" class="mt-3 text-sm text-blue-500 hover:text-blue-700">Refresh</button>
+            </div>
+
+            <div class="bg-white p-6 shadow rounded-lg">
+                <h3 class="text-lg font-semibold mb-3">Approved Reservations by Location (Today)</h3>
+                <div id="dailyReportContainer">
+                    <p class="text-gray-500">Loading...</p>
+                </div>
+                <button onclick="fetchDailyReport()" class="mt-3 text-sm text-blue-500 hover:text-blue-700">Refresh</button>
+            </div>
+        </div> 
+
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="px-6 py-4 border-b">
+                <h3 class="font-bold text-lg">Reservation Approval List</h3>
+            </div>
+            <div class="px-6 py-4 border-b bg-gray-50 flex flex-wrap gap-4 items-end">
+    
+            <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1">status</label>
+                <select id="filterStatus" class="border rounded px-3 py-2 text-sm w-32">
+                    <option value="">all</option>
+                    <option value="pending">pending</option>
+                    <option value="approved">approved</option>
+                    <option value="denied">denied</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1">Date</label>
+                <input type="date" id="filterDate" lang="en" class="border rounded px-3 py-2 text-sm">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1">Location</label>
+                <input type="text" id="filterLocation" placeholder="eg. library" class="border rounded px-3 py-2 text-sm">
+            </div>
+
+            <button onclick="fetchReservations()" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 transition h-10">
+                search
+            </button>
+
+            <button onclick="resetFilters()" class="text-gray-500 hover:text-gray-700 text-sm h-10 underline">
+                reset
+            </button>
+        </div>
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-50 text-gray-600 text-sm">
+                        <th class="p-4 border-b">Applicant</th>
+                        <th class="p-4 border-b">Visit Date</th> 
+                        <th class="p-4 border-b">Visit Time</th>
+                        <th class="p-4 border-b">Location</th>
+                        <th class="p-4 border-b">Reason</th>
+                        <th class="p-4 border-b">Status</th>
+                        <th class="p-4 border-b">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="reservationTableBody">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="adminProfileModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h3 class="text-xl font-bold mb-4 border-b pb-2">Edit Admin Profile</h3>
+            
+            <form id="adminProfileForm">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-xs font-bold mb-1">Username</label>
+                    <input type="text" id="profileUsername" class="w-full bg-gray-100 border p-2 rounded cursor-not-allowed" readonly>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-xs font-bold mb-1">Email</label>
+                    <input type="email" id="profileEmail" class="w-full border p-2 rounded focus:border-blue-500 outline-none">
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-xs font-bold mb-1">Phone</label>
+                    <input type="text" id="profilePhone" class="w-full border p-2 rounded focus:border-blue-500 outline-none">
+                </div>
+
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="closeAdminProfile()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        window.onload = function() {
+            fetchReservations(); 
+            fetchMetrics(); 
+            fetchTodayVisitors();
+            fetchDailyReport();
+        };
+
+        function fetchReservations() {
+            const userId = localStorage.getItem('user_id');
+            if (!userId) {
+                console.error("Admin ID missing, redirecting.");
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Get HTML input values
+            const statusVal = document.getElementById('filterStatus').value;
+            const dateVal = document.getElementById('filterDate').value;
+            const locVal = document.getElementById('filterLocation').value;
+
+            // Use URLSearchParams to intelligently build URL
+            // This automatically handles ?status=pending&date=... concatenation
+            const params = new URLSearchParams();
+            
+            if (statusVal) params.append('status', statusVal);
+            if (dateVal)   params.append('date', dateVal);
+            if (locVal)    params.append('location', locVal);
+            
+            const url = `/api/admin/reservations?${params.toString()}`;
+
+            console.log("Requesting URL:", url); 
+
+            //  Make the request
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(res => {
+                if (res.status === 401) window.location.href = 'login.html';
+                return res.json();
+            })
+            .then(data => {
+                renderTable(data);
+            })
+            .catch(err => console.error("Fetch failed:", err));
+        }
+
+        // Clear filter conditions
+        function resetFilters() {
+            document.getElementById('filterStatus').value = "";
+            document.getElementById('filterDate').value = "";
+            document.getElementById('filterLocation').value = "";
+            fetchReservations(); // Fetch all data again after clearing filters
+        }
+        function renderTable(data) {
+            const tbody = document.getElementById('reservationTableBody');
+            tbody.innerHTML = '';
+
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                row.className = "hover:bg-gray-50";
+                
+                let statusClass = "text-yellow-600 bg-yellow-100";
+                if(item.status === 'approved') statusClass = "text-green-600 bg-green-100";
+                if(item.status === 'denied') statusClass = "text-red-600 bg-red-100";
+
+                row.innerHTML = `
+                    <td class="p-4 border-b font-medium">${item.user}</td>
+                    <td class="p-4 border-b text-sm">${item.visit_date}</td>
+                    <td class="p-4 border-b text-sm">${item.visit_time}</td>
+                    <td class="p-4 border-b text-sm">${item.location}</td>
+                    <td class="p-4 border-b text-gray-500 text-sm">${item.purpose}</td>
+                    <td class="p-4 border-b">
+                        <span class="px-2 py-1 text-xs rounded-full ${statusClass}">${item.status}</span>
+                    </td>
+                    <td class="p-4 border-b">
+                        ${item.status === 'pending' ? `
+                            <button onclick="updateStatus(${item.reservation_id}, 'approved')" class="text-green-600 hover:text-green-800 mr-2 text-sm font-bold">approve</button>
+                            <button onclick="updateStatus(${item.reservation_id}, 'denied')" class="text-red-600 hover:text-red-800 text-sm font-bold">denied</button>
+                        ` : '<span class="text-gray-400 text-sm">solved</span>'}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Function to update the status of a specific reservation
+        function updateStatus(id, status) {
+            const action = status === 'approved' ? 'approve' : 'denied';
+            if(!confirm(`Are you sure to ${action} this reservation?`)) return;
+
+            const adminId = localStorage.getItem('user_id'); 
+            
+            // return struct
+            const requestBody = {
+                status: status,
+                admin_id: adminId, 
+                comment: ""     
+            };
+
+            fetch(`/api/admin/reservations/${id}`, { 
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json', // REQUIRED: Tells the backend the body is JSON
+                },
+                body: JSON.stringify(requestBody) // Send status field in JSON format
+            })
+            .then(res => {
+                if (res.status === 401) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                if (!res.ok) {
+                    throw new Error('API Update Failed');
+                }
+                return res.json();
+            })
+            .then(data => {
+                // Success: Log and refresh the table to see the new status
+                console.log(`Reservation ID ${id} updated as ${status}. Refreshing data.`);
+                fetchReservations(); // REFRESH DATA AFTER SUCCESSFUL UPDATE!
+            })
+            .catch(err => {
+                console.error("Update failed:", err);
+                alert("Failed to update status. See console for details.");
+            });
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+
+        // Admin Profile Logic 
+
+        const adminProfileModal = document.getElementById('adminProfileModal');
+        const adminId = localStorage.getItem('user_id'); // Assuming user_id is stored for admin too
+
+        //  Open Modal & Fetch Data
+        async function openAdminProfile() {
+            adminProfileModal.classList.remove('hidden');
+            
+            try {
+                const res = await fetch(`/api/admin/profile/${adminId}`);
+                const data = await res.json();
+                
+                if (res.ok && data.success) {
+                    document.getElementById('profileUsername').value = data.profile.username || '';
+                    document.getElementById('profileEmail').value = data.profile.email || '';
+                    document.getElementById('profilePhone').value = data.profile.phone || '';
+                } else {
+                    alert("Failed to load profile data");
+                }
+            } catch (err) {
+                console.error("Error loading profile:", err);
+            }
+        }
+
+        // Close Modal
+        function closeAdminProfile() {
+            adminProfileModal.classList.add('hidden');
+        }
+
+        // Handle Form Submission (Update)
+        document.getElementById('adminProfileForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const updateData = {
+                email: document.getElementById('profileEmail').value,
+                phone: document.getElementById('profilePhone').value
+            };
+            
+            try {
+                const res = await fetch(`/api/admin/profile/${adminId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updateData)
+                });
+                
+                const result = await res.json();
+                
+                if (res.ok && result.success) {
+                    alert("Profile updated successfully!");
+                    closeAdminProfile();
+                } else {
+                    alert("Update failed: " + (result.message || "Unknown error"));
+                }
+            } catch (err) {
+                console.error("Error updating profile:", err);
+                alert("Server connection failed.");
+            }
+        });
+        async function fetchMetrics() {
+            try {
+                const res = await fetch('/api/admin/metrics');
+                
+                if (!res.ok) {
+                    console.error("Failed to fetch metrics", res.status);
+                    return;
+                }
+                
+                const data = await res.json();
+                
+                // Pending Count
+                document.getElementById('pendingCount').textContent = data.pending_count;
+                
+                //  Today's Visitors Count
+                document.getElementById('todayVisitorsCount').textContent = data.today_visitors_count;
+                
+                //  Popular Location
+                document.getElementById('popularLocationName').textContent = `Popular Location: ${data.popular_location.location}`;
+                document.getElementById('popularLocationTotal').textContent = data.popular_location.total;
+
+            } catch (err) {
+                console.error("Error fetching dashboard metrics:", err);
+            }
+        }
+        // Function to fetch and display Today's Visitors list
+        async function fetchTodayVisitors() {
+            
+            try {
+                const res = await fetch('/api/admin/today');
+                const data = await res.json();
+                
+                // Assuming you have a container element like <ul id="todayVisitorsList">
+                const listContainer = document.getElementById('todayVisitorsList');
+                if (!listContainer) return; // Exit if element not found
+                listContainer.innerHTML = ''; 
+
+                if (data.length === 0) {
+                    listContainer.innerHTML = '<li class="text-gray-500">No approved visitors scheduled for today.</li>';
+                    return;
+                }
+
+                data.forEach(v => {
+                    const li = document.createElement('li');
+                    li.className = 'py-1 text-sm';
+                    // Data structure: username, visit_time, location
+                    li.innerHTML = `<strong>${v.username}</strong> at ${v.visit_time} (${v.location})`;
+                    listContainer.appendChild(li);
+                });
+
+            } catch (err) {
+                console.error("Failed to fetch today's visitors:", err);
+            }
+        }
+
+        // Function to fetch and display Daily Location Report
+        async function fetchDailyReport() {
+            
+            try {
+                const res = await fetch('/api/admin/report');
+                const data = await res.json();
+                
+                // Assuming you have a table or div container like <div id="dailyReportChart">
+                const reportContainer = document.getElementById('dailyReportContainer');
+                if (!reportContainer) return;
+                reportContainer.innerHTML = '';
+                
+                if (data.length === 0) {
+                    reportContainer.innerHTML = '<p class="text-gray-500">No approved reservations to report today.</p>';
+                    return;
+                }
+
+                // Simple table rendering for the report
+                let html = `
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr>
+                                    <th class="p-2 text-left font-semibold border-b">Location</th>
+                                    <th class="p-2 text-left font-semibold border-b">Total Reservations</th> 
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                data.forEach(item => {
+                        html += `
+                            <tr>
+                                <td class="p-2 text-left border-b">${item.location}</td>
+                                <td class="p-2 text-left border-b">${item.total}</td> 
+                            </tr>
+                        `;
+                    });
+                html += '</tbody></table>';
+                
+                reportContainer.innerHTML = html;
+
+            } catch (err) {
+                console.error("Failed to fetch daily report:", err);
+            }
+        }
+    </script>
+</body>
+</html>

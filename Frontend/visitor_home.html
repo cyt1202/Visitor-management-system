@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Visitor Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+
+    <nav class="bg-white shadow mb-8">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="text-xl font-bold text-gray-800">Visitor Center</div>
+            <button onclick="logout()" class="text-red-500 hover:text-red-700">log out</button>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <div class="bg-white p-6 rounded-lg shadow hover:shadow-md transition cursor-pointer" onclick="window.location.href='reservation_create.html'">
+                <div class="text-blue-500 mb-4 text-3xl">📅</div>
+                <h3 class="text-lg font-bold mb-2">make new reservation</h3>
+                <p class="text-gray-600">Apply to visit the company or specific person.</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow hover:shadow-md transition cursor-pointer"onclick="window.location.href='reservation_list.html'">
+                <div class="text-green-500 mb-4 text-3xl">📋</div>
+                <h3 class="text-lg font-bold mb-2">My reservations</h3>
+                <p class="text-gray-600">View approval status or cancel reservations</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow hover:shadow-md transition cursor-pointer"onclick="window.location.href='visitor_profile.html'">
+                <div class="text-purple-500 mb-4 text-3xl">👤</div>
+                <h3 class="text-lg font-bold mb-2">Personal Information</h3>
+                <p class="text-gray-600">Update contact details or change password.</p>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+
+        window.onload = function() {
+        const userId = localStorage.getItem('user_id');
+        const role = localStorage.getItem('role');
+        const username = localStorage.getItem('username');
+        // check whether the user has log in by token
+        if (!userId) {
+            window.location.href = 'login.html';
+            }
+        }
+    
+    </script>
+</body>
+</html>

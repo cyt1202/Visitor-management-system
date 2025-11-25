@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Visitor System - Login/Register</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+
+    <div class="bg-white p-8 rounded-lg shadow-lg w-96 transition-all duration-300">
+        <h2 id="formTitle" class="text-2xl font-bold mb-6 text-center text-gray-800">User Login</h2>
+        
+        <div id="msgBox" class="hidden mb-4 p-3 rounded text-sm text-center"></div>
+
+        <form id="loginForm">
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Username</label>
+                <input type="text" id="loginUser" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500" placeholder="Enter username" required>
+            </div>
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Password</label>
+                <input type="password" id="loginPass" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500" placeholder="Enter password" required>
+            </div>
+            <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 transition">
+                Login
+            </button>
+            <p class="mt-4 text-center text-sm text-gray-600">
+                No account? <a href="#" onclick="toggleMode()" class="text-blue-600 hover:underline">Register now</a>
+            </p>
+        </form>
+
+        <form id="registerForm" class="hidden">
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Set Username</label>
+                <input type="text" id="regUser" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-green-500" placeholder="Set a username" required>
+            </div>
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Set Password</label>
+                <input type="password" id="regPass" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-green-500" placeholder="Set a password" required>
+            </div>
+            
+            <button type="submit" class="w-full bg-green-600 text-white font-bold py-2 px-4 rounded hover:bg-green-700 transition">
+                Register Visitor Account
+            </button>
+            <p class="mt-4 text-center text-sm text-gray-600">
+                Already have an account? <a href="#" onclick="toggleMode()" class="text-green-600 hover:underline">Back to Login</a>
+            </p>
+        </form>
+    </div>
+
+    <script>
+        // ========================
+        // UI Toggling Logic
+        // ========================
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const formTitle = document.getElementById('formTitle');
+        const msgBox = document.getElementById('msgBox');
+
+        function toggleMode() {
+            // Clear previous message
+            showMsg("", "hidden"); 
+            
+            if (loginForm.classList.contains('hidden')) {
+                // Switch to login mode
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                formTitle.innerText = "User Login";
+            } else {
+                // Switch to register mode
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+                formTitle.innerText = "Visitor Registration";
+            }
+        }
+
+        // Helper function: Display messages
+        function showMsg(text, type) {
+            msgBox.innerText = text;
+            msgBox.className = 'hidden mb-4 p-3 rounded text-sm text-center';
+            
+            if (type === 'error') {
+                msgBox.classList.remove('hidden');
+                msgBox.classList.add('bg-red-100', 'text-red-700');
+            } else if (type === 'success') {
+                msgBox.classList.remove('hidden');
+                msgBox.classList.add('bg-green-100', 'text-green-700');
+            }
+        }
+
+        // ========================
+        // 1. Handle Login
+        // ========================
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const username = document.getElementById('loginUser').value;
+            const password = document.getElementById('loginPass').value;
+
+            try {
+                const res = await fetch("/api/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    // Login successful, store info
+                    localStorage.clear(); // Clear old data
+                    localStorage.setItem('role', data.role);
+                    // print("login success")
+                    if (data.role === 'admin') {
+                        localStorage.setItem('admin_id', data.admin_id);
+                        // Store a generic ID for easier access later
+                        localStorage.setItem('user_id', data.admin_id); 
+                        window.location.href = "admin_dashboard.html";
+                    } else {
+                        // visitor
+                        localStorage.setItem('user_id', data.user_id);
+                        window.location.href = "visitor_home.html";
+                    }
+                } else {
+                    showMsg(data.message || "Login failed. Check username or password.", "error");
+                }
+            } catch (err) {
+                console.error(err);
+                showMsg("Failed to connect to server", "error");
+            }
+        });
+
+        // ========================
+        // 2. Handle Registration
+        // ========================
+        registerForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const username = document.getElementById('regUser').value;
+            const password = document.getElementById('regPass').value;
+
+            try {
+                const res = await fetch("/api/register", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    showMsg("Registration successful! Please log in.", "success");
+                    
+                    // Switch back to login form after success
+                    setTimeout(() => {
+                        toggleMode(); 
+                        document.getElementById('loginUser').value = username;
+                        document.getElementById('loginPass').focus();
+                        showMsg("Registration successful, please log in.", "success");
+                    }, 1500);
+                } else {
+                    // Handle errors like "Username exists"
+                    showMsg(data.message || "Registration failed.", "error");
+                }
+            } catch (err) {
+                console.error(err);
+                showMsg("Server connection error", "error");
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Personal Information</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+
+    <nav class="bg-white shadow mb-8">
+        <div class="container mx-auto px-6 py-4">
+            <a href="visitor_home.html" class="text-blue-600 hover:underline font-bold">&larr; Back to frontpage</a>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-6 flex justify-center">
+        <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+            <div class="text-center mb-6">
+                <div class="text-4xl mb-2">👤</div>
+                <h2 class="text-2xl font-bold text-gray-800">profile</h2>
+            </div>
+            <form id="profileForm">
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Username</label>
+                <input type="text" id="username" class="w-full bg-gray-100 border px-3 py-2 rounded cursor-not-allowed" readonly>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Full Name</label>
+                <input type="text" id="name" class="w-full border px-3 py-2 rounded focus:border-blue-500 outline-none" placeholder="Enter your full name">
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Phone</label>
+                <input type="text" id="phone" class="w-full border px-3 py-2 rounded focus:border-blue-500 outline-none" placeholder="Enter phone number">
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Affiliation / Organization</label>
+                <input type="text" id="affiliation" class="w-full border px-3 py-2 rounded focus:border-blue-500 outline-none" placeholder="Enter your company/institution">
+            </div>
+
+            <button type="submit" class="w-full bg-purple-600 text-white font-bold py-2 rounded hover:bg-purple-700 transition">
+                Save Changes
+            </button>
+            
+            <div id="statusMessage" style="display: none;" class="mt-4"></div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+    const userId = localStorage.getItem('user_id');
+    const token = localStorage.getItem('token'); // Use token if implemented for auth checks
+
+    // --- Helper Function to Set Message ---
+    function showProfileMessage(message, isError = false) {
+        const msgElement = document.getElementById('statusMessage');
+        msgElement.innerText = message;
+        msgElement.className = isError 
+            ? 'text-red-600 bg-red-100 p-3 rounded mt-4' 
+            : 'text-green-600 bg-green-100 p-3 rounded mt-4';
+        msgElement.style.display = 'block';
+        setTimeout(() => { msgElement.style.display = 'none'; }, 5000);
+    }
+
+    // 1. Load profile data when the page loads
+    window.onload = function() {
+        if (!userId) {
+            alert("Authentication failed. Redirecting to login.");
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        loadProfile();
+    };
+
+    async function loadProfile() {
+        try {
+            const res = await fetch(`/api/profile/${userId}`, {
+                method: 'GET',
+                headers: { 
+                    'Authorization': 'Bearer ' + token // Include token if available
+                }
+            });
+
+            const data = await res.json();
+            
+            if (res.ok && data.success) {
+                const profile = data.profile;
+                
+                // Populate form fields with data from the backend
+                document.getElementById('username').value = profile.username || 'N/A';
+                document.getElementById('name').value = profile.name || '';
+                document.getElementById('phone').value = profile.phone || '';
+                document.getElementById('affiliation').value = profile.affiliation || '';
+            } else {
+                showProfileMessage(data.message || "Failed to load profile data.", true);
+            }
+        } catch (error) {
+            console.error('Fetch error:', error);
+            showProfileMessage("Server communication failed.", true);
+        }
+    }
+
+    // 2. Handle form submission to update profile
+    document.getElementById('profileForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // Collect form data
+        const updateData = {
+            name: document.getElementById('name').value,
+            phone: document.getElementById('phone').value,
+            affiliation: document.getElementById('affiliation').value 
+        };
+
+        try {
+            const res = await fetch(`/api/profile/${userId}`, {
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token 
+                },
+                body: JSON.stringify(updateData)
+            });
+            
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                showProfileMessage("Profile updated successfully!");
+                loadProfile(); 
+            } else {
+                showProfileMessage(data.message || "Update failed.", true);
+            }
+
+        } catch (error) {
+            console.error('Update error:', error);
+            showProfileMessage("Server communication failed during update.", true);
+        }
+    });
+    </script>
+</body>
+</html>
